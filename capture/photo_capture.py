@@ -3,7 +3,6 @@ from time import sleep
 from configparser import SafeConfigParser
 from picamera import PiCamera
 
-
 warnings.filterwarnings('default', category=DeprecationWarning)
 
 
