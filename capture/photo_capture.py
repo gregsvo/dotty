@@ -4,9 +4,9 @@ import arrow
 
 
 def main():
-    capture_photo()
-    # name_of_photo = capture_photo()
-    # location_of_photo = upload_photo(name_of_photo)
+    filename_of_photo = capture_photo()
+    file_location_of_photo = upload_photo(filename_of_photo)
+    store_photo_info(filename_of_photo, file_location_of_photo)
 
 
 def capture_photo():
@@ -23,14 +23,18 @@ def capture_photo():
         g = camera.awb_gains
         camera.awb_mode = 'off'
         camera.awb_gains = g
-        camera.annotate_text = time.format('MM/DD/YYYY : HH:mm A')
+        camera.annotate_text = time.format('MM/DD/YYYY : hh:mm a')
         camera.capture(filename)
         sleep(2)
         return filename
 
 
-# def upload_photo(name_of_captured_photo):
-#     pass
+def upload_photo(filename_of_photo):
+    return 'file_location_of_photo'
+
+
+def store_photo_info(filename_of_photo, file_location_of_photo):
+    pass
 
 
 def get_current_time():
