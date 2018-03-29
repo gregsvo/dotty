@@ -22,5 +22,8 @@ From now on, we can anytime switch between the above listed python alternative
 versions using below command and entering a selection number:
 `# update-alternatives --config python`
 
+## Install ImageMagick:
+`sudo apt-get install  libmagickwand-dev`
+
 
 

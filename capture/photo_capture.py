@@ -1,24 +1,40 @@
-import warnings
 from time import sleep
 from picamera import PiCamera
+import arrow
 
-warnings.filterwarnings('default', category=DeprecationWarning)
+
+def main():
+    capture_photo()
+    # name_of_photo = capture_photo()
+    # location_of_photo = upload_photo(name_of_photo)
 
 
-def main(config):
-        capture_photo(config)
-
-def capture_photo(config):
+def capture_photo():
+    time = get_current_time()
+    save_location = '/home/pi/Pictures/'
+    filename = '{}{}.jpg'.format(save_location, time.timestamp)
     with PiCamera() as camera:
-        camera = PiCamera(resolution=(1920, 1080), framerate=30)
         camera.iso = 100
         camera.resolution = (1024, 768)
         camera.framerate = 30
-        camera.brightness = 30
-        camera.contrast = 30
-        # Camera warm-up time
         sleep(2)
-        camera.capture('foo.jpg')
+        camera.shutter_speed = camera.exposure_speed
+        camera.exposure_mode = 'off'
+        g = camera.awb_gains
+        camera.awb_mode = 'off'
+        camera.awb_gains = g
+        camera.annotate_text = time.format('MM/DD/YYYY : HH:mm A')
+        camera.capture(filename)
+        sleep(2)
+        return filename
+
+
+# def upload_photo(name_of_captured_photo):
+#     pass
+
+
+def get_current_time():
+    return arrow.utcnow().to('US/Eastern')
 
 
 if __name__ == '__main__':
