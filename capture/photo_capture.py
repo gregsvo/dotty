@@ -23,6 +23,8 @@ def capture_photo():
         g = camera.awb_gains
         camera.awb_mode = 'off'
         camera.awb_gains = g
+        camera.annotate_foreground = Color('black')
+        camera.annotate_background = Color('white')
         camera.annotate_text = time.format('MM/DD/YYYY : hh:mm a')
         camera.capture(filename)
         sleep(2)
