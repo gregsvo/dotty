@@ -14,7 +14,7 @@ def capture_photo():
     save_location = '/home/pi/Pictures/'
     filename = '{}{}.jpg'.format(save_location, time.timestamp)
     with PiCamera() as camera:
-        camera.iso = 100
+        camera.iso = 200
         camera.resolution = (1024, 768)
         camera.framerate = 30
         sleep(2)
