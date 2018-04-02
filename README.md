@@ -22,11 +22,21 @@ From now on, we can anytime switch between the above listed python alternative
 versions using below command and entering a selection number:
 `# update-alternatives --config python`
 
-## Install ImageMagick:
+## Install what you need:
 `sudo apt-get update`
 `sudo apt-get upgrade`
-`sudo apt-get install imagemagick`
 `pip install arrow`
+
+## Install ImageMagick
+`sudo apt-get install imagemagick`
+
+## Change the config file to suit your needs
+Located at config.ini
+
+## Create a cronjob:
+`crontab -e`
+Add to the bottom of the file,
+`*/10 * * * * python /home/pi/dotty/capture/photo_capture.py`
 
 
 
