@@ -33,10 +33,11 @@ versions using below command and entering a selection number:
 ## Change the config file to suit your needs
 Located at config.ini
 
-## Create a cronjob:
-`crontab -e`
-Add to the bottom of the file,
-`*/10 * * * * python /home/pi/dotty/capture/photo_capture.py`
+## Edit the cron.txt file, then load it:
+`crontab cron.txt
+
+## Check if cronjobs loaded correctly:
+`crontabn -l`
 
 
 
