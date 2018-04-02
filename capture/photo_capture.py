@@ -15,7 +15,7 @@ def main():
 
 def capture_photo(config_mode=None):
     config_mode = config_mode if config_mode else 'CAMERA_PROD'
-    time = get_current_time(config_mode)
+    time = get_current_time()
     filename = '{}{}.jpg'.format(config.get(config_mode, 'SAVE_LOCATION'), time.timestamp)
 
     with PiCamera() as camera:
@@ -45,8 +45,8 @@ def store_photo_info(filename_of_photo, file_location_of_photo):
     pass
 
 
-def get_current_time(config_mode=None):
-    return arrow.utcnow().to(config.get(config_mode, 'TIME_ZONE'))
+def get_current_time():
+    return arrow.utcnow().to('US/Eastern')
 
 
 if __name__ == '__main__':
