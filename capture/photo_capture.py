@@ -20,7 +20,7 @@ def capture_photo(config_mode=None):
 
     with PiCamera() as camera:
         camera.iso = int(config.get(config_mode, 'ISO'))
-        camera.resolution = config.get(config_mode, 'RESOLUTION')
+        camera.resolution = tuple(map(int, config.get(config_mode, 'RESOLUTION')[1:-1].split(',')))
         camera.framerate = int(config.get(config_mode, 'FRAMERATE'))
         sleep(int(config.get(config_mode, 'SLEEP_TIME_SECS')))
         camera.shutter_speed = camera.exposure_speed
