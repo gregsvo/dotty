@@ -8,7 +8,6 @@ config.read('../config.ini')
 
 
 def main():
-
     filename_of_photo = capture_photo()
     file_location_of_photo = upload_photo(filename_of_photo)
     store_photo_info(filename_of_photo, file_location_of_photo)
@@ -16,9 +15,8 @@ def main():
 
 def capture_photo(config_mode=None):
     config_mode = config_mode if config_mode else 'CAMERA_PROD'
-    time = get_current_time()
-    save_location = config.get(config_mode, 'SAVE_LOCATION')
-    filename = '{}{}.jpg'.format(save_location, time.timestamp)
+    time = get_current_time(config_mode)
+    filename = '{}{}.jpg'.format(config.get(config_mode, 'SAVE_LOCATION'), time.timestamp)
 
     with PiCamera() as camera:
         camera.iso = config.get(config_mode, 'ISO')
@@ -47,8 +45,8 @@ def store_photo_info(filename_of_photo, file_location_of_photo):
     pass
 
 
-def get_current_time():
-    return arrow.utcnow().to(config.get(config_mode,'TIME_ZONE'))
+def get_current_time(config_mode=None):
+    return arrow.utcnow().to(config.get(config_mode, 'TIME_ZONE'))
 
 
 if __name__ == '__main__':
