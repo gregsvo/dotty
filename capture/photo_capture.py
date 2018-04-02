@@ -19,10 +19,10 @@ def capture_photo(config_mode=None):
     filename = '{}{}.jpg'.format(config.get(config_mode, 'SAVE_LOCATION'), time.timestamp)
 
     with PiCamera() as camera:
-        camera.iso = config.get(config_mode, 'ISO')
+        camera.iso = int(config.get(config_mode, 'ISO'))
         camera.resolution = config.get(config_mode, 'RESOLUTION')
-        camera.framerate = config.get(config_mode, 'FRAMERATE')
-        sleep(config.get(config_mode, 'SLEEP_TIME_SECS'))
+        camera.framerate = int(config.get(config_mode, 'FRAMERATE'))
+        sleep(int(config.get(config_mode, 'SLEEP_TIME_SECS')))
         camera.shutter_speed = camera.exposure_speed
         camera.exposure_mode = config.get(config_mode, 'EXPOSURE_MODE')
         g = camera.awb_gains
@@ -32,7 +32,7 @@ def capture_photo(config_mode=None):
         camera.annotate_background = Color(config.get(config_mode, 'TIMESTAMP_FOREGROUND'))
         camera.annotate_text = time.format(config.get(config_mode, 'TIMESTAMP_FORMAT'))
         camera.capture(filename)
-        sleep(config.get(config_mode, 'SLEEP_TIME_SECS'))
+        sleep(int(config.get(config_mode, 'SLEEP_TIME_SECS')))
 
         return filename
 
