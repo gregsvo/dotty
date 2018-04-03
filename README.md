@@ -26,6 +26,8 @@ versions using below command and entering a selection number:
 `sudo apt-get update`
 `sudo apt-get upgrade`
 `pip install arrow`
+`pip install boto3`
+`pip install awscli`
 
 ## Install ImageMagick
 `sudo apt-get install imagemagick`

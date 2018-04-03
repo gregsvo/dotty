@@ -1,10 +1,6 @@
 from time import sleep
 from picamera import PiCamera, Color
 import arrow
-import ConfigParser
-
-config = ConfigParser.ConfigParser()
-config.read('../config.ini')
 
 
 def main():
@@ -13,27 +9,25 @@ def main():
     store_photo_info(filename_of_photo, file_location_of_photo)
 
 
-def capture_photo(config_mode=None):
-    config_mode = config_mode if config_mode else 'CAMERA_PROD'
-    time = get_current_time(config_mode)
-    filename = '{}{}.jpg'.format(config.get(config_mode, 'SAVE_LOCATION'), time.timestamp)
-
+def capture_photo():
+    time = get_current_time()
+    save_location = '/home/pi/Pictures/'
+    filename = '{}{}.jpg'.format(save_location, time.timestamp)
     with PiCamera() as camera:
-        camera.iso = int(config.get(config_mode, 'ISO'))
-        camera.resolution = tuple(map(int, config.get(config_mode, 'RESOLUTION')[1:-1].split(',')))
-        camera.framerate = int(config.get(config_mode, 'FRAMERATE'))
-        sleep(int(config.get(config_mode, 'SLEEP_TIME_SECS')))
+        camera.iso = 200
+        camera.resolution = (1024, 768)
+        camera.framerate = 30
+        sleep(2)
         camera.shutter_speed = camera.exposure_speed
-        camera.exposure_mode = config.get(config_mode, 'EXPOSURE_MODE')
+        camera.exposure_mode = 'off'
         g = camera.awb_gains
-        camera.awb_mode = config.get(config_mode, 'AWB_MODE')
+        camera.awb_mode = 'off'
         camera.awb_gains = g
-        camera.annotate_foreground = Color(config.get(config_mode, 'TIMESTAMP_BACKGROUND'))
-        camera.annotate_background = Color(config.get(config_mode, 'TIMESTAMP_FOREGROUND'))
-        camera.annotate_text = time.format(config.get(config_mode, 'TIMESTAMP_FORMAT'))
+        camera.annotate_foreground = Color('black')
+        camera.annotate_background = Color('white')
+        camera.annotate_text = time.format('MM/DD/YYYY : hh:mm a')
         camera.capture(filename)
-        sleep(int(config.get(config_mode, 'SLEEP_TIME_SECS')))
-
+        sleep(2)
         return filename
 
 
@@ -45,9 +39,8 @@ def store_photo_info(filename_of_photo, file_location_of_photo):
     pass
 
 
-def get_current_time(config_mode):
-    return arrow.utcnow().to(config.get(config_mode, 'TIMEZONE'))
-
+def get_current_time():
+    return arrow.utcnow().to('US/Eastern')
 
 
 if __name__ == '__main__':
