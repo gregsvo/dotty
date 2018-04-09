@@ -7,20 +7,21 @@ from time import sleep
 s3_resource = boto3.resource('s3')
 s3_client = boto3.client('s3')
 
+photo = {}
+
 
 def main():
-    time = get_current_time()
-    filename_of_photo = capture_photo(time)
+    capture_photo()
     if not s3_bucket_exists():
         create_s3_bucket()
-    photo_url = upload_photo(filename_of_photo)
-    save_photo_info(filename_of_photo, photo_url, time)
+        upload_photo()
+    save_photo_info()
 
 
-def capture_photo(time):
-    save_location = '/home/pi/Pictures/'
-    filename = '{}.jpg'.format(time.timestamp)
-    file_location = '{}{}'.format(save_location, filename)
+def capture_photo():
+    time = get_current_time()
+    photo['filename'] = get_photo_filename(time)
+    photo['path'] = '/home/pi/Pictures/{}'.format(photo['filename'])
     with PiCamera() as camera:
         camera.iso = 200
         camera.resolution = (1024, 768)
@@ -34,17 +35,20 @@ def capture_photo(time):
         camera.annotate_foreground = Color('black')
         camera.annotate_background = Color('white')
         camera.annotate_text = time.format('MM/DD/YYYY : hh:mm a')
-        camera.capture(file_location)
+        camera.capture(photo['path'])
         sleep(2)
-        return filename
+    photo['timestamp'] = time.timestamp
 
 
-def upload_photo(filename_of_photo):
-    photo_data = open(filename_of_photo, 'rb')
-    s3_resource.Bucket('dotty').put_object(Key=filename_of_photo, Body=photo_data)
+def get_photo_filename(time):
+    return '{}.jpg'.format(time.timestamp)
+
+
+def upload_photo():
+    photo_data = open(photo['path'], 'rb')
+    s3_resource.Bucket('dotty').put_object(Key=photo['filename'], Body=photo_data)
     # TODO: verify upload via boto3.exceptions.S3UploadFailedError
-    photo_url = 'https://s3.{}.amazonaws.com/{}/{}'.format('us-east-2', 'dotty', filename_of_photo)
-    return photo_url
+    photo['url'] = 'https://s3.{}.amazonaws.com/{}/{}'.format('us-east-2', 'dotty', photo['filename'])
 
 
 def create_s3_bucket():
@@ -57,11 +61,10 @@ def s3_bucket_exists():
     return 'dotty' in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]
 
 
-def save_photo_info(filename_of_photo, photo_url, time):
-    filename = 'photo_upload_list.csv'
-    with open(filename, 'w') as file:
+def save_photo_info():
+    with open('photo_upload_list.csv', 'w') as file:
         writer = csv.writer(file)
-        writer.writerow([filename_of_photo, photo_url, time.timestamp])
+        writer.writerow([photo['filename'], photo['url'], photo['timestamp']])
 
 
 def get_current_time():
