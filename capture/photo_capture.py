@@ -4,7 +4,8 @@ import csv
 from picamera import PiCamera, Color
 from time import sleep
 
-s3 = boto3.resource('s3')
+s3_resource = boto3.resource('s3')
+s3_client = boto3.client('s3')
 
 
 def main():
@@ -39,20 +40,20 @@ def capture_photo(time):
 
 def upload_photo(filename_of_photo):
     photo_data = open(filename_of_photo, 'rb')
-    s3.Bucket('dotty').put_object(Key=filename_of_photo, Body=photo_data)
+    s3_resource.Bucket('dotty').put_object(Key=filename_of_photo, Body=photo_data)
     # TODO: verify upload via boto3.exceptions.S3UploadFailedError
     photo_url = 'https://s3.{}.amazonaws.com/{}/{}'.format('us-east-2', 'dotty', filename_of_photo)
     return photo_url
 
 
 def create_s3_bucket():
-    bucket_creation_response = s3.create_bucket(Bucket='dotty', CreateBucketConfiguration={'LocationConstraint': 'us-east-2'})
+    bucket_creation_response = s3_client.create_bucket(Bucket='dotty', CreateBucketConfiguration={'LocationConstraint': 'us-east-2'})
     if bucket_creation_response['ResponseMetadata']['HTTPStatusCode'] == 200:
         return True
 
 
 def s3_bucket_exists():
-    return 'dotty' in [bucket['Name'] for bucket in s3.list_buckets()['Buckets']]
+    return 'dotty' in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]
 
 
 def save_photo_info(filename_of_photo, file_location_of_photo, time):
