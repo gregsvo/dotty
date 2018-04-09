@@ -14,7 +14,7 @@ def main():
     capture_photo()
     if not s3_bucket_exists():
         create_s3_bucket()
-        upload_photo()
+    upload_photo()
     save_photo_info()
 
 
