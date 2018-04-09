@@ -41,7 +41,7 @@ Located at config.ini
 `crontab cron.txt`
 
 ## Check if cronjobs loaded correctly:
-`crontabn -l`
+`crontab -l`
 
 ## Install Amazon CLI
 `pip install awscli --upgrade --user`
