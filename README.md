@@ -29,6 +29,8 @@ versions using below command and entering a selection number:
 `pip install boto3`
 `pip install awscli`
 
+
+
 ## Install ImageMagick
 `sudo apt-get install imagemagick`
 
@@ -40,6 +42,13 @@ Located at config.ini
 
 ## Check if cronjobs loaded correctly:
 `crontabn -l`
+
+## Install Amazon CLI
+`pip install awscli --upgrade --user`
+If you need additional help, please refer to https://docs.aws.amazon.com/cli/latest/userguide/awscli-install-linux.html
+
+## Setup your credientials for aws cli
+`aws configure`
 
 
 
