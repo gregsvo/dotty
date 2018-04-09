@@ -22,6 +22,8 @@ def capture_photo():
     time = get_current_time()
     photo['filename'] = get_photo_filename(time)
     photo['path'] = '/home/pi/Pictures/{}'.format(photo['filename'])
+    photo['timestamp'] = time.timestamp
+    photo['readable_time'] = time.format('MM/DD/YYYY : hh:mm a')
     with PiCamera() as camera:
         camera.iso = 200
         camera.resolution = (1024, 768)
@@ -34,10 +36,9 @@ def capture_photo():
         camera.awb_gains = g
         camera.annotate_foreground = Color('black')
         camera.annotate_background = Color('white')
-        camera.annotate_text = time.format('MM/DD/YYYY : hh:mm a')
+        camera.annotate_text = photo['readable_time']
         camera.capture(photo['path'])
         sleep(2)
-    photo['timestamp'] = time.timestamp
 
 
 def get_photo_filename(time):
