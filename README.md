@@ -38,7 +38,7 @@ versions using below command and entering a selection number:
 Located at config.ini
 
 ## Edit the cron.txt file, then load it:
-`crontab cron.txt
+`crontab cron.txt`
 
 ## Check if cronjobs loaded correctly:
 `crontabn -l`
