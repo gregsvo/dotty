@@ -19,7 +19,8 @@ def main():
 
 def capture_photo(time):
     save_location = '/home/pi/Pictures/'
-    filename = '{}{}.jpg'.format(save_location, time.timestamp)
+    filename = '{}.jpg'.format(time.timestamp)
+    file_location = '{}{}'.format(save_location, filename)
     with PiCamera() as camera:
         camera.iso = 200
         camera.resolution = (1024, 768)
@@ -33,7 +34,7 @@ def capture_photo(time):
         camera.annotate_foreground = Color('black')
         camera.annotate_background = Color('white')
         camera.annotate_text = time.format('MM/DD/YYYY : hh:mm a')
-        camera.capture(filename)
+        camera.capture(file_location)
         sleep(2)
         return filename
 
@@ -56,11 +57,11 @@ def s3_bucket_exists():
     return 'dotty' in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]
 
 
-def save_photo_info(filename_of_photo, file_location_of_photo, time):
+def save_photo_info(filename_of_photo, photo_url, time):
     filename = 'photo_upload_list.csv'
     with open(filename, 'w') as file:
         writer = csv.writer(file)
-        writer.writerow([filename_of_photo, file_location_of_photo, time.timestamp])
+        writer.writerow([filename_of_photo, photo_url, time.timestamp])
 
 
 def get_current_time():
