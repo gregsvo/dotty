@@ -1,14 +1,11 @@
 ##################CAPTURE PHOTO#################
 
-### Take a photo every ten minutes MON-SAT, 5AM-9PM every 10 minutes
-0,10,20,30,40,50 5-21 * * 1-6 python /home/pi/dotty/capture/photo_capture.py
+### Photo at minute 0, 10, 20, 30, 40, and 50 past every hour from 4AM through 9PM, Monday through Saturday.
+0,10,20,30,40,50 4-21 * * 1-6 python /home/pi/dotty/capture/photo_capture.py
 
-### Take a photo MON-SAT, 9PM-12AM every 60 minutes
-10 21-23 * * 1-6 python /home/pi/dotty/capture/photo_capture.py
+### Photo at minute 10 past every hour from 12AM through 4AM and every hour from 9PM through 11PM, Monday through Saturday.
+10 0-4,21-23 * * 1-6 python /home/pi/dotty/capture/photo_capture.py
 
-### Take a photo MON-SAT, 12AM-5AM every 60 minutes
-10 0-5 * * 1-6 python /home/pi/dotty/capture/photo_capture.py
-
-### Take a photo SUN, ALL DAY every 60 minutes
+### Photo at minute 10 past every hour from 12AM through 11PM on Sunday.
 10 0-23 * * 7 python /home/pi/dotty/capture/photo_capture.py
 
