@@ -42,6 +42,8 @@ def photo_exists_in_S3():
             print("{} s3 verification failed. saving locally".format(photo_metadata['filename']))
         return False
     else:
+        print("{} s3 verification success - file exists".format(photo_metadata['filename']))
+        photo_metadata['upload_status'] = 'SUCCESS'
         return True
 
 
