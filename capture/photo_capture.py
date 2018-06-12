@@ -107,7 +107,12 @@ def s3_bucket_exists():
 def log_photo_metadata():
     with open('photo_upload_list.csv', 'a') as file:
         writer = csv.writer(file)
-        writer.writerow([photo_metadata['readable_time'], photo_metadata['filename'], photo_metadata['url']])
+        writer.writerow([
+            photo_metadata['readable_time'],
+            photo_metadata['filename'],
+            photo_metadata['url'],
+            photo_metadata['upload_status']
+        ])
 
 
 def get_current_time():
