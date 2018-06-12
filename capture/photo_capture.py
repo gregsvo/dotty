@@ -1,6 +1,7 @@
 import arrow
 import boto3
 import csv
+import botocore
 from picamera import PiCamera, Color
 from time import sleep
 from io import BytesIO
@@ -14,12 +15,34 @@ photo_metadata = {}
 
 
 def main():
-    in_mem_photo = capture_photo()
+    in_mem_photo, photo_data = capture_photo()
     if in_mem_photo:
         if not s3_bucket_exists():
             create_s3_bucket()
         upload_photo(in_mem_photo)
-        save_photo_info()
+        if not photo_exists_in_S3():
+            save_photo_to_sd_card(photo_data)
+        log_photo_metadata()
+
+
+def save_photo_to_sd_card(photo_data):
+    print('saving {} locally'.format(photo_metadata['filename']))
+    photo_data.save(photo_metadata['path'])
+
+
+def photo_exists_in_S3():
+    try:
+        s3_resource.Object('dotty', photo_metadata['filename']).load()
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Message'] == "Not Found":
+            photo_metadata['upload_status'] = 'UPLOADED'
+            print("{} not found in S3, saving locally".format(photo_metadata['filename']))
+        else:
+            photo_metadata['upload_status'] = 'FAIL-SAVING LOCALLY'
+            print("{} s3 verification failed. saving locally".format(photo_metadata['filename']))
+        return False
+    else:
+        return True
 
 
 def capture_photo():
@@ -51,7 +74,7 @@ def capture_photo():
         photo_data = Image.open(photo_stream)
         photo_data.save(in_mem_photo, format='jpeg')
         in_mem_photo.seek(0)
-    return in_mem_photo
+    return in_mem_photo, photo_data
 
 
 def get_photo_filename(time):
@@ -60,11 +83,11 @@ def get_photo_filename(time):
 
 
 def upload_photo(in_mem_photo):
-    print('uploading photo')
+    print('uploading photo...')
     s3_resource.Bucket('dotty').put_object(Key=photo_metadata['filename'], Body=in_mem_photo)
-    # TODO: verify upload via boto3.exceptions.S3UploadFailedError
+    sleep(5)
     photo_metadata['url'] = 'https://s3.{}.amazonaws.com/{}/{}'.format('us-east-2', 'dotty', photo_metadata['filename'])
-    print("UPLOAD SUCCESSFUL: {}".format(photo_metadata['url']))
+    print('upload complete')
 
 
 def create_s3_bucket():
@@ -81,7 +104,7 @@ def s3_bucket_exists():
     return 'dotty' in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]
 
 
-def save_photo_info():
+def log_photo_metadata():
     with open('photo_upload_list.csv', 'a') as file:
         writer = csv.writer(file)
         writer.writerow([photo_metadata['readable_time'], photo_metadata['filename'], photo_metadata['url']])
