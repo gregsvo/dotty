@@ -26,7 +26,6 @@ def main():
 
 
 def save_photo_to_sd_card(photo_data):
-    print('saving {} locally'.format(photo_metadata['filename']))
     photo_data.save(photo_metadata['path'])
 
 
@@ -36,19 +35,15 @@ def photo_exists_in_S3():
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Message'] == "Not Found":
             photo_metadata['upload_status'] = 'UPLOADED'
-            print("{} not found in S3, saving locally".format(photo_metadata['filename']))
         else:
             photo_metadata['upload_status'] = 'FAIL-SAVING LOCALLY'
-            print("{} s3 verification failed. saving locally".format(photo_metadata['filename']))
         return False
     else:
-        print("{} s3 verification success - file exists".format(photo_metadata['filename']))
         photo_metadata['upload_status'] = 'SUCCESS'
         return True
 
 
 def capture_photo():
-    print('capturing photo')
     photo_stream = BytesIO()
     in_mem_photo = BytesIO()
     time = get_current_time()
@@ -80,20 +75,16 @@ def capture_photo():
 
 
 def get_photo_filename(time):
-    print('creating filename')
     return '{}.jpg'.format(time.timestamp)
 
 
 def upload_photo(in_mem_photo):
-    print('uploading photo...')
     s3_resource.Bucket('dotty').put_object(Key=photo_metadata['filename'], Body=in_mem_photo)
     sleep(5)
     photo_metadata['url'] = 'https://s3.{}.amazonaws.com/{}/{}'.format('us-east-2', 'dotty', photo_metadata['filename'])
-    print('upload complete')
 
 
 def create_s3_bucket():
-    print('creating S3 bucket')
     bucket_creation_response = s3_client.create_bucket(Bucket='dotty', CreateBucketConfiguration={'LocationConstraint': 'us-east-2'})
     if bucket_creation_response['ResponseMetadata']['HTTPStatusCode'] == 200:
         return True
@@ -102,7 +93,6 @@ def create_s3_bucket():
 
 
 def s3_bucket_exists():
-    print('confirming bucket exists')
     return 'dotty' in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]
 
 
