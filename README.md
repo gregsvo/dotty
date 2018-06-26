@@ -22,33 +22,41 @@ From now on, we can anytime switch between the above listed python alternative
 versions using below command and entering a selection number:
 `# update-alternatives --config python`
 
-## Install what you need:
+## Add ENV variables to your bashrc file:
+Accessing your .bashrc file: `sudo nano ~/.bashrc`
+Then add the following:
+```
+## for dotty
+alias python='/usr/bin/python3.5'
+export PATH=~/.local/bin:$PATH
+export AWS_ACCESS_KEY_ID='YOUR AWS SECRET KEY ID GOES HERE'
+export AWS_SECRET_KEY='YOUR AWS SECRET KEY GOES HERE'
+
+
+
+```
+
+### If you're using Raspbian, in _Preferences/Interfaces_:
+Enable: Camera
+Enable: SSH (If you need it)
+### In _Prefeferences/Localisation_ (if using Raspbian):
+Set Locale, Timezone
+
+## Install Python packages you need:
+###  If you're getting errors pip installing:
+Upgrade Pip: `/usr/bin/python -m pip installl --upgrade pip`
 `sudo apt-get update`
 `sudo apt-get upgrade`
 `pip install arrow`
 `pip install boto3`
-`pip install awscli`
+
+## Change the config file with your custom login information
+Add your AWS credentials with `aws configure`
+or  located at `~/.aws/credentials`
 
 
-
-## Install ImageMagick
-`sudo apt-get install imagemagick`
-
-## Change the config file to suit your needs
-Located at config.ini
-
-## Edit the cron.txt file, then load it:
+## after cloning this repo, edit the cron.txt file as needed, then load it:
 `crontab cron.txt`
 
 ## Check if cronjobs loaded correctly:
 `crontab -l`
-
-## Install Amazon CLI
-`pip install awscli --upgrade --user`
-If you need additional help, please refer to https://docs.aws.amazon.com/cli/latest/userguide/awscli-install-linux.html
-
-## Setup your credientials for aws cli
-`aws configure`
-
-
-

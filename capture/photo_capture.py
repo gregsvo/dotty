@@ -1,91 +1,95 @@
-import arrow
-import boto3
-import csv
-import botocore
+from io import BytesIO
 from picamera import PiCamera, Color
 from time import sleep
-from io import BytesIO
-from PIL import Image
+import arrow
+import boto3
+from configparser import ConfigParser
+import os
 
+config = ConfigParser()
+config.read('config.ini')
 
-s3_resource = boto3.resource('s3')
-s3_client = boto3.client('s3')
+s3_client = boto3.client(
+    service_name='s3',
+    endpoint_url='https://s3.{}.amazonaws.com/'.format(config.get('s3', 'region')),
+    aws_access_key_id=os.environ['AWS_SECRET_KEY_ID'],
+    aws_secret_access_key=os.environ['AWS_SECRET_KEY']
+)
 
 photo_metadata = {}
 
 
 def main():
-    in_mem_photo, photo_data = capture_photo()
-    if in_mem_photo:
+    image = capture_photo()
+    if image:
         if not s3_bucket_exists():
             create_s3_bucket()
-        upload_photo(in_mem_photo)
-        if not photo_exists_in_S3():
-            save_photo_to_sd_card(photo_data)
-        log_photo_metadata()
+        upload_photo(image)
 
 
 def save_photo_to_sd_card(photo_data):
     photo_data.save(photo_metadata['path'])
 
 
-def photo_exists_in_S3():
-    try:
-        s3_resource.Object('dotty', photo_metadata['filename']).load()
-    except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Message'] == "Not Found":
-            photo_metadata['upload_status'] = 'UPLOADED'
-        else:
-            photo_metadata['upload_status'] = 'FAIL-SAVING LOCALLY'
-        return False
-    else:
-        photo_metadata['upload_status'] = 'SUCCESS'
-        return True
-
-
 def capture_photo():
-    photo_stream = BytesIO()
-    in_mem_photo = BytesIO()
-    time = get_current_time()
+    output_stream = BytesIO()
+    time = get_now_date()
     photo_metadata['filename'] = get_photo_filename(time)
     photo_metadata['path'] = '/home/pi/Pictures/{}'.format(photo_metadata['filename'])
-    photo_metadata['timestamp'] = time.timestamp
-    photo_metadata['readable_time'] = time.format('MM/DD/YYYY : hh:mm a')
+    photo_metadata['readable_time'] = time.format(config.get('camera', 'watermark_format'))
 
     with PiCamera() as camera:
-        camera.iso = 200
-        camera.resolution = (1024, 768)
-        camera.framerate = 30
-        sleep(2)
-        camera.shutter_speed = camera.exposure_speed
-        camera.exposure_mode = 'off'
-        g = camera.awb_gains
-        camera.awb_mode = 'off'
-        camera.awb_gains = g
-        camera.annotate_foreground = Color('black')
-        camera.annotate_background = Color('white')
-        camera.annotate_text = photo_metadata['readable_time']
-        camera.capture(photo_stream, format='jpeg')
-        sleep(2)
-        photo_stream.seek(0)
-        photo_data = Image.open(photo_stream)
-        photo_data.save(in_mem_photo, format='jpeg')
-        in_mem_photo.seek(0)
-    return in_mem_photo, photo_data
+        try:
+            # set camera
+            camera.iso = int(config.get('camera', 'iso'))
+            horizontal = int(config.get('camera', 'res_horizontal'))
+            vertical = int(config.get('camera', 'res_vertical'))
+            camera.resolution = (horizontal, vertical)
+            camera.framerate = int(config.get('camera', 'framerate'))
+            sleep(2)   # sleep because the camera needs to literally warm up. Give er' time!
+            camera.shutter_speed = camera.exposure_speed
+            camera.exposure_mode = config.get('camera', 'exposure_mode')
+            g = camera.awb_gains
+            camera.awb_mode = config.get('camera', 'awb_mode')
+            camera.awb_gains = g
+            camera.annotate_foreground = Color(config.get('camera', 'watermark_foreground'))
+            camera.annotate_background = Color(config.get('camera', 'watermark_background'))
+            camera.annotate_text = photo_metadata['readable_time']
+
+            #capture the image
+            camera.capture(output_stream, config.get('settings', 'file_format'))
+            sleep(2) # sleep because the camera needs to literally warm up. Give er' time!
+            output_stream.seek(0)
+            return output_stream.getvalue()
+        except Exception as e:
+            print("Capture Image Failure. Possibly intersection of two processes.")
+            exit()
+        finally:
+            camera.close()
 
 
 def get_photo_filename(time):
-    return '{}.jpg'.format(time.timestamp)
+    return '{}.{}'.format(
+        time.format(config.get('settings', 'picture_string_format')),
+        config.get('settings', 'file_format')
+    )
 
 
-def upload_photo(in_mem_photo):
-    s3_resource.Bucket('dotty').put_object(Key=photo_metadata['filename'], Body=in_mem_photo)
-    sleep(5)
-    photo_metadata['url'] = 'https://s3.{}.amazonaws.com/{}/{}'.format('us-east-2', 'dotty', photo_metadata['filename'])
+def upload_photo(image):
+    try:
+        bytes_stream = BytesIO(image)
+        s3_client.upload_fileobj(
+            bytes_stream,
+            config.get('s3', 'main_bucket_name'),
+            photo_metadata['filename']
+        )
+        return True
+    except Exception as ex:
+        return False
 
 
 def create_s3_bucket():
-    bucket_creation_response = s3_client.create_bucket(Bucket='dotty', CreateBucketConfiguration={'LocationConstraint': 'us-east-2'})
+    bucket_creation_response = s3_client.create_bucket(Bucket=config.get('s3', 'main_bucket_name'), CreateBucketConfiguration={'LocationConstraint': 'us-east-2'})
     if bucket_creation_response['ResponseMetadata']['HTTPStatusCode'] == 200:
         return True
     else:
@@ -93,22 +97,16 @@ def create_s3_bucket():
 
 
 def s3_bucket_exists():
-    return 'dotty' in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]
+    return config.get('s3', 'main_bucket_name') in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]
 
 
-def log_photo_metadata():
-    with open('photo_upload_list.csv', 'a') as file:
-        writer = csv.writer(file)
-        writer.writerow([
-            photo_metadata['readable_time'],
-            photo_metadata['filename'],
-            photo_metadata['url'],
-            photo_metadata['upload_status']
-        ])
+def get_now_date():
+    return arrow.utcnow().to(config.get('settings', 'timezone'))
 
 
-def get_current_time():
-    return arrow.utcnow().to('US/Eastern')
+def load_configs(config_filename):
+
+    return config
 
 
 if __name__ == '__main__':
