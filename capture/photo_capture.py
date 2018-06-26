@@ -56,14 +56,16 @@ def capture_photo():
             camera.annotate_background = Color(config.get('camera', 'watermark_background'))
             camera.annotate_text = photo_metadata['readable_time']
 
-            #capture the image
+            # capture the image
             camera.capture(output_stream, config.get('settings', 'file_format'))
-            sleep(2) # sleep because the camera needs to literally warm up. Give er' time!
+            sleep(2)  # sleep because the camera needs to literally warm up. Give er' time!
             output_stream.seek(0)
             return output_stream.getvalue()
+
         except Exception as e:
             print("Capture Image Failure. Possibly intersection of two processes.")
             exit()
+
         finally:
             camera.close()
 
@@ -102,11 +104,6 @@ def s3_bucket_exists():
 
 def get_now_date():
     return arrow.utcnow().to(config.get('settings', 'timezone'))
-
-
-def load_configs(config_filename):
-
-    return config
 
 
 if __name__ == '__main__':
