@@ -18,7 +18,7 @@ logger.addHandler(stream_handler)
 # pull configs
 logger.info('Pulling configs from config.ini')
 config = ConfigParser()
-config.read('config.ini')
+config.read('/home/pi/dotty/capture/config.ini')
 
 # create s3 client
 logger.info('Creating S3 Client')
