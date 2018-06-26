@@ -12,7 +12,7 @@ config.read('config.ini')
 s3_client = boto3.client(
     service_name='s3',
     endpoint_url='https://s3.{}.amazonaws.com/'.format(config.get('s3', 'region')),
-    aws_access_key_id=os.environ['AWS_SECRET_KEY_ID'],
+    aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_KEY']
 )
 
