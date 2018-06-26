@@ -34,24 +34,20 @@ photo_metadata = {}
 
 def main():
     logger.info('Attempting to capture photo')
-    image = capture_photo()
+    time = get_now_date()
+    image = capture_photo(time)
     if image:
         if not s3_bucket_exists():
             create_s3_bucket()
-        upload_photo(image)
+        upload_photo(image, time)
 
 
 def save_photo_to_sd_card(photo_data):
     photo_data.save(photo_metadata['path'])
 
 
-def capture_photo():
-    output_stream = BytesIO()
-    time = get_now_date()
-    photo_metadata['filename'] = get_photo_filename(time)
-    photo_metadata['path'] = '/home/pi/Pictures/{}'.format(photo_metadata['filename'])
+def capture_photo(time):
     photo_metadata['readable_time'] = time.format(config.get('camera', 'watermark_format'))
-
     with PiCamera() as camera:
         try:
             # set camera
@@ -71,6 +67,7 @@ def capture_photo():
             camera.annotate_text = photo_metadata['readable_time']
 
             # capture the image
+            output_stream = BytesIO()
             logger.info('SAY CHEESE!')
             camera.capture(output_stream, config.get('settings', 'file_format'))
             sleep(2)  # sleep because the camera needs to literally warm up. Give er' time!
@@ -95,14 +92,17 @@ def get_photo_filename(time):
     return filename
 
 
-def upload_photo(image):
+def upload_photo(image, time):
     logger.info('Attempting to upload photo to S3')
+    photo_metadata['filename'] = get_photo_filename(time)
+    photo_metadata['path'] = '/home/pi/Pictures/{}'.format(photo_metadata['filename'])
     try:
         bytes_stream = BytesIO(image)
+        folder_nesting = '{}/{}/{}/'.format(time.year, time.month, time.day)
         s3_client.upload_fileobj(
             bytes_stream,
             config.get('s3', 'main_bucket_name'),
-            photo_metadata['filename']
+            '{}{}'.format(folder_nesting, photo_metadata['filename'])
         )
     except Exception as ex:
         logger.error('Upload to S3 failed!')
