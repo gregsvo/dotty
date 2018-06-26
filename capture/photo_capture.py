@@ -28,22 +28,28 @@ s3_client = boto3.client(
     aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_KEY']
 )
-
+upload_to_s3 = True if config.get('settings', 'upload_to_s3') == 'true' else False
 photo_metadata = {}
 
 
 def main():
     logger.info('Attempting to capture photo')
     time = get_now_date()
-    image = capture_photo(time)
-    if image:
+    output_stream = capture_photo(time)
+    if output_stream:
         if not s3_bucket_exists():
             create_s3_bucket()
-        upload_photo(image, time)
+        upload_photo(output_stream, time)
 
 
-def save_photo_to_sd_card(photo_data):
-    photo_data.save(photo_metadata['path'])
+def save_photo_to_sd_card(output_stream):
+    logger.info('Attempting to save to SD card')
+    try:
+        from PIL import Image
+        image = Image.open(output_stream)
+        image.save('/home/pi/Pictures/{}'.format(photo_metadata['filename']))
+    except Exception as ex:
+        logger.critical('save to SD card failed: {}'.format(ex.message))
 
 
 def capture_photo(time):
@@ -72,10 +78,10 @@ def capture_photo(time):
             camera.capture(output_stream, config.get('settings', 'file_format'))
             sleep(2)  # sleep because the camera needs to literally warm up. Give er' time!
             output_stream.seek(0)
-            return output_stream.getvalue()
+            return output_stream
 
         except Exception as e:
-            logger.critical('Capture Image Failure. Possibly intersection of two processes')
+            logger.error('Capture Image Failure. Possibly intersection of two processes')
             exit()
 
         finally:
@@ -92,23 +98,27 @@ def get_photo_filename(time):
     return filename
 
 
-def upload_photo(image, time):
+def upload_photo(output_stream, time):
     logger.info('Attempting to upload photo to S3')
     photo_metadata['filename'] = get_photo_filename(time)
-    photo_metadata['path'] = '/home/pi/Pictures/{}'.format(photo_metadata['filename'])
-    try:
-        bytes_stream = BytesIO(image)
-        folder_nesting = '{}/{}/{}/'.format(time.year, time.month, time.day)
-        s3_client.upload_fileobj(
-            bytes_stream,
-            config.get('s3', 'main_bucket_name'),
-            '{}{}'.format(folder_nesting, photo_metadata['filename'])
-        )
-    except Exception as ex:
-        logger.error('Upload to S3 failed!')
-        return False
-    logger.info('s3 photo upload of {} successful'.format(photo_metadata['filename']))
-    return True
+    if upload_to_s3:
+        try:
+            image = output_stream.getvalue()
+            bytes_stream = BytesIO(image)
+            folder_nesting = '{}/{}/{}/'.format(time.year, time.month, time.day)
+            s3_client.upload_fileobj(
+                bytes_stream,
+                config.get('s3', 'main_bucket_name'),
+                '{}{}'.format(folder_nesting, photo_metadata['filename'])
+            )
+        except Exception as ex:
+            logger.error('Upload to S3 failed, attempting to save to SD card.')
+            save_photo_to_sd_card(output_stream)
+            return
+        logger.info('s3 photo upload of {} successful'.format(photo_metadata['filename']))
+        return True
+    else:
+        save_photo_to_sd_card(output_stream)
 
 
 def create_s3_bucket():
