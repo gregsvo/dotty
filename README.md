@@ -1,5 +1,5 @@
 # dotty
-Timelapse Video Creator For The Raspberry Pi Camera
+An s3 Enabled Timelapse Capture Tool For The Raspberry Pi, and it's PiCamera
 
 ## Setup
 
@@ -31,9 +31,6 @@ alias python='/usr/bin/python3.5'
 export PATH=~/.local/bin:$PATH
 export AWS_ACCESS_KEY_ID='YOUR AWS SECRET KEY ID GOES HERE'
 export AWS_SECRET_KEY='YOUR AWS SECRET KEY GOES HERE'
-
-
-
 ```
 
 ### If you're using Raspbian, in _Preferences/Interfaces_:
@@ -49,11 +46,6 @@ Upgrade Pip: `/usr/bin/python -m pip installl --upgrade pip`
 `sudo apt-get upgrade`
 `pip install arrow`
 `pip install boto3`
-
-## Change the config file with your custom login information
-Add your AWS credentials with `aws configure`
-or  located at `~/.aws/credentials`
-
 
 ## after cloning this repo, edit the cron.txt file as needed, then load it:
 `crontab cron.txt`
